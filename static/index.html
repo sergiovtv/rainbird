@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#087a47" />
+    <title>Rain Bird — Controle local</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" role="img"><path d="M24 4C18 13 10 21 10 31a14 14 0 0 0 28 0C38 21 30 13 24 4Z" fill="none" stroke="currentColor" stroke-width="3"/><path d="M16 31c2 5 7 7 12 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <p class="eyebrow">Controle local</p>
+          <h1>Rain Bird</h1>
+        </div>
+        <div id="connectionBadge" class="badge offline"><span></span> Desconectado</div>
+      </header>
+
+      <section id="setupPanel" class="panel setup-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">ESP-RZXe · 4 zonas</p>
+            <h2>Conectar ao programador</h2>
+          </div>
+          <div class="network-chip">Wi-Fi local</div>
+        </div>
+        <p class="helper">O PIN permanece somente na memória deste Mac e é apagado ao fechar o servidor.</p>
+        <form id="connectForm" class="connect-form">
+          <label>
+            Endereço IP
+            <input id="host" name="host" inputmode="decimal" value="192.168.15.176" autocomplete="off" required />
+          </label>
+          <label>
+            PIN do controlador
+            <div class="password-field">
+              <input id="password" name="password" type="password" minlength="4" maxlength="16" autocomplete="off" required />
+              <button id="togglePassword" type="button" class="icon-button" aria-label="Mostrar PIN">Mostrar</button>
+            </div>
+          </label>
+          <button class="primary-button" type="submit">Conectar</button>
+        </form>
+        <div id="setupMessage" class="message" aria-live="polite"></div>
+      </section>
+
+      <section id="dashboard" class="dashboard hidden" aria-live="polite">
+        <div class="summary panel">
+          <div>
+            <p class="eyebrow">Programador</p>
+            <h2>ESP-RZXe</h2>
+            <p id="deviceAddress" class="muted">192.168.15.176</p>
+          </div>
+          <div class="summary-actions">
+            <button id="refreshButton" class="secondary-button" type="button">Atualizar</button>
+            <button id="disconnectButton" class="text-button" type="button">Desconectar</button>
+          </div>
+        </div>
+
+        <div class="status-strip">
+          <div><span class="status-label">Estado</span><strong id="wateringState">Em espera</strong></div>
+          <div><span class="status-label">Atraso por chuva</span><strong id="rainDelay">0 dias</strong></div>
+          <div><span class="status-label">Última leitura</span><strong id="lastUpdate">—</strong></div>
+        </div>
+
+        <section class="zones-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Irrigação manual</p>
+              <h2>Zonas</h2>
+            </div>
+            <button id="stopButton" class="danger-button" type="button">Parar tudo</button>
+          </div>
+          <div id="zonesGrid" class="zones-grid"></div>
+        </section>
+
+        <div id="dashboardMessage" class="message" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <dialog id="confirmDialog">
+      <form method="dialog">
+        <p class="eyebrow">Confirmar comando</p>
+        <h2 id="dialogTitle">Iniciar irrigação?</h2>
+        <p id="dialogText" class="muted"></p>
+        <div class="dialog-actions">
+          <button value="cancel" class="secondary-button">Cancelar</button>
+          <button id="confirmAction" value="confirm" class="primary-button">Confirmar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
