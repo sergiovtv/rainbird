@@ -77,6 +77,18 @@ button:disabled { cursor: wait; opacity: .58; }
 .zone-card h3 { margin: 0 0 16px; font-size: 1.1rem; }
 .zone-controls { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
 .zone-controls.stop-only { grid-template-columns: 1fr; }
+.schedule-section { padding: 16px 0 4px; }
+.read-only-chip { padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.75); font-size: .8rem; font-weight: 750; }
+.schedule-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.schedule-card { padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: linear-gradient(145deg, #fff, #f8fbf9); box-shadow: 0 10px 28px rgba(16,35,26,.05); }
+.schedule-card-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.schedule-card-heading h3 { margin: 1px 0 0; font-size: 1.08rem; }
+.schedule-label { color: var(--muted); font-size: .72rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.schedule-details { display: grid; gap: 12px; margin: 0; }
+.schedule-details > div { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; padding-top: 12px; border-top: 1px solid #e8eeea; }
+.schedule-details dt { color: var(--muted); font-size: .82rem; font-weight: 700; }
+.schedule-details dd { margin: 0; text-align: right; font-weight: 800; }
+.schedule-empty { grid-column: 1 / -1; margin: 0; padding: 22px; border: 1px dashed #cbd8d0; border-radius: 16px; color: var(--muted); text-align: center; }
 dialog { width: min(440px, calc(100% - 32px)); padding: 28px; border: 0; border-radius: 22px; color: var(--ink); box-shadow: 0 30px 90px rgba(0,0,0,.28); }
 dialog::backdrop { background: rgba(8, 28, 18, .48); backdrop-filter: blur(4px); }
 dialog label { margin-top: 22px; }
@@ -84,7 +96,7 @@ dialog label { margin-top: 22px; }
 
 @media (max-width: 760px) {
   .shell { width: min(100% - 22px, 680px); padding-top: 22px; }
-  .connect-form, .zones-grid { grid-template-columns: 1fr; }
+  .connect-form, .zones-grid, .schedule-grid { grid-template-columns: 1fr; }
   .status-strip { grid-template-columns: 1fr; }
   .panel-heading { align-items: flex-start; }
   .summary { align-items: flex-start; }

@@ -75,6 +75,50 @@ function renderZones(available, active) {
     </article>`).join("");
 }
 
+const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+function scheduleRule(schedule) {
+  if (schedule.frequency === 1) return "Dias ímpares";
+  if (schedule.frequency === 2) return "Dias pares";
+  if (schedule.frequency === 3) {
+    return `A cada ${schedule.period} dia${schedule.period === 1 ? "" : "s"}`;
+  }
+  const days = dayNames.filter((_, index) => schedule.daysMask & (1 << index));
+  return days.length === 7 ? "Todos os dias" : (days.join(", ") || "Nenhum dia");
+}
+
+function formatStart(minutes) {
+  const hour = String(Math.floor(minutes / 60)).padStart(2, "0");
+  const minute = String(minutes % 60).padStart(2, "0");
+  return `${hour}:${minute}`;
+}
+
+function renderSchedule(schedules) {
+  const grid = $("#scheduleGrid");
+  if (!schedules.length) {
+    grid.innerHTML = '<p class="schedule-empty">Nenhuma programação encontrada.</p>';
+    return;
+  }
+  grid.innerHTML = schedules.map((schedule) => `
+    <article class="schedule-card">
+      <div class="schedule-card-heading">
+        <div class="zone-number">${schedule.zone}</div>
+        <div><span class="schedule-label">Zona</span><h3>Zona ${schedule.zone}</h3></div>
+      </div>
+      <dl class="schedule-details">
+        <div><dt>Dias</dt><dd>${scheduleRule(schedule)}</dd></div>
+        <div><dt>Horários</dt><dd>${schedule.starts.length ? schedule.starts.map(formatStart).join(" · ") : "Sem horário"}</dd></div>
+        <div><dt>Duração</dt><dd>${schedule.duration} minuto${schedule.duration === 1 ? "" : "s"}</dd></div>
+      </dl>
+    </article>`).join("");
+}
+
+async function refreshSchedule() {
+  $("#scheduleGrid").innerHTML = '<p class="schedule-empty">Lendo a programação…</p>';
+  const data = await api("/api/schedule");
+  renderSchedule(data.schedules);
+}
+
 function openStopDialog(zone = null) {
   pendingAction = { type: "stop", zone };
   $("#dialogTitle").textContent = zone ? `Desligar a zona ${zone}?` : "Parar toda a irrigação?";
@@ -90,6 +134,7 @@ async function refreshStatus(silent = false) {
   try {
     const data = await api("/api/status");
     renderZones(data.stations, data.states);
+    await refreshSchedule();
     const running = activeSet(data.states);
     $("#wateringState").textContent = running.size ? `Zona ${[...running].join(", ")} ativa` : "Em espera";
     currentRainDelay = Number(data.rainDelay || 0);

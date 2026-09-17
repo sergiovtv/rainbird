@@ -12,7 +12,7 @@ from typing import Any
 
 import aiohttp
 from aiohttp import web
-from pyrainbird import async_client
+from pyrainbird import async_client, rainbird
 
 
 ROOT = Path(__file__).resolve().parent
@@ -55,6 +55,40 @@ class RainBirdService:
 
 
 service = RainBirdService()
+
+
+def decode_rzxe_schedule(data: str, _: dict[str, Any]) -> dict[str, Any]:
+    """Decode the independent per-zone schedule used by ESP-RZXe controllers."""
+    subcommand = int(data[4:6], 16)
+    rest = data[6:]
+    if subcommand == 0:
+        if len(rest) == 4:
+            return {"controllerInfo": {"rainSensor": int(rest[2:4], 16)}}
+        return {}
+    if not 0 < subcommand < 16 or len(data) != 28:
+        return {"data": data}
+
+    starts = []
+    for index in range(6):
+        minutes = int(rest[2 + index * 2 : 4 + index * 2], 16) * 10
+        if minutes < 24 * 60:
+            starts.append(minutes)
+    return {
+        "zoneInfo": {
+            "zone": subcommand,
+            "duration": int(rest[0:2], 16),
+            "starts": starts,
+            "frequency": int(rest[14:16], 16),
+            "daysMask": int(rest[16:18], 16),
+            "period": int(rest[18:20], 16),
+            "synchro": int(rest[20:22], 16) & 0x7F,
+        }
+    }
+
+
+# pyrainbird 2.1 does not yet decode the ESP-RZXe independent-zone format.
+# Replacing only this read decoder keeps the remaining, proven local protocol intact.
+rainbird.DECODERS["decode_schedule"] = decode_rzxe_schedule
 
 
 def jsonable(value: Any) -> Any:
@@ -156,6 +190,23 @@ async def api_status(_: web.Request) -> web.Response:
         return error_response(exc)
 
 
+async def api_schedule(_: web.Request) -> web.Response:
+    """Read every enabled zone schedule without changing controller settings."""
+    try:
+        stations = await service.call("get_available_stations")
+        zones = sorted(stations.stations.active_set)
+        schedules = []
+        for zone in zones:
+            result = await service.call(
+                "_process_command", None, "RetrieveScheduleRequest", zone
+            )
+            if zone_info := result.get("zoneInfo"):
+                schedules.append(zone_info)
+        return web.json_response({"ok": True, "schedules": schedules})
+    except Exception as exc:
+        return error_response(exc)
+
+
 async def api_start(request: web.Request) -> web.Response:
     try:
         body = await request.json()
@@ -202,6 +253,7 @@ def create_app() -> web.Application:
     app.router.add_get("/api/config", api_config)
     app.router.add_post("/api/connect", api_connect)
     app.router.add_get("/api/status", api_status)
+    app.router.add_get("/api/schedule", api_schedule)
     app.router.add_post("/api/start", api_start)
     app.router.add_post("/api/stop", api_stop)
     app.router.add_post("/api/rain-delay", api_rain_delay)
