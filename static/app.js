@@ -48,18 +48,32 @@ function renderZones(available, active) {
         <span class="zone-state ${running.has(zone) ? "active" : ""}">${running.has(zone) ? "Irrigando agora" : "Em espera"}</span>
       </div>
       <h3>Zona ${zone}</h3>
-      <div class="zone-controls">
-        <select id="minutes-${zone}" aria-label="Duração da zona ${zone}">
-          <option value="1">1 minuto</option>
-          <option value="5" selected>5 minutos</option>
-          <option value="10">10 minutos</option>
-          <option value="15">15 minutos</option>
-          <option value="20">20 minutos</option>
-          <option value="30">30 minutos</option>
-        </select>
-        <button class="primary-button start-zone" data-zone="${zone}" type="button">Iniciar</button>
-      </div>
+      ${running.has(zone) ? `
+        <div class="zone-controls stop-only">
+          <button class="danger-button stop-zone" data-zone="${zone}" type="button">Desligar zona</button>
+        </div>` : `
+        <div class="zone-controls">
+          <select id="minutes-${zone}" aria-label="Duração da zona ${zone}">
+            <option value="1">1 minuto</option>
+            <option value="5" selected>5 minutos</option>
+            <option value="10">10 minutos</option>
+            <option value="15">15 minutos</option>
+            <option value="20">20 minutos</option>
+            <option value="30">30 minutos</option>
+          </select>
+          <button class="primary-button start-zone" data-zone="${zone}" type="button">Iniciar</button>
+        </div>`}
     </article>`).join("");
+}
+
+function openStopDialog(zone = null) {
+  pendingAction = { type: "stop", zone };
+  $("#dialogTitle").textContent = zone ? `Desligar a zona ${zone}?` : "Parar toda a irrigação?";
+  $("#dialogText").textContent = zone
+    ? `A irrigação da zona ${zone} será interrompida imediatamente.`
+    : "Qualquer zona ativa será desligada imediatamente.";
+  $("#confirmAction").textContent = zone ? "Desligar zona" : "Parar tudo";
+  dialog.showModal();
 }
 
 async function refreshStatus(silent = false) {
@@ -107,6 +121,11 @@ $("#connectForm").addEventListener("submit", async (event) => {
 });
 
 $("#zonesGrid").addEventListener("click", (event) => {
+  const stopButton = event.target.closest(".stop-zone");
+  if (stopButton) {
+    openStopDialog(Number(stopButton.dataset.zone));
+    return;
+  }
   const button = event.target.closest(".start-zone");
   if (!button) return;
   const zone = Number(button.dataset.zone);
@@ -119,11 +138,7 @@ $("#zonesGrid").addEventListener("click", (event) => {
 });
 
 $("#stopButton").addEventListener("click", () => {
-  pendingAction = { type: "stop" };
-  $("#dialogTitle").textContent = "Parar toda a irrigação?";
-  $("#dialogText").textContent = "Qualquer zona ativa será desligada imediatamente.";
-  $("#confirmAction").textContent = "Parar tudo";
-  dialog.showModal();
+  openStopDialog();
 });
 
 $("#editRainDelay").addEventListener("click", () => {

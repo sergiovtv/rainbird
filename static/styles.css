@@ -76,6 +76,7 @@ button:disabled { cursor: wait; opacity: .58; }
 .zone-state.active { color: var(--green-700); }
 .zone-card h3 { margin: 0 0 16px; font-size: 1.1rem; }
 .zone-controls { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.zone-controls.stop-only { grid-template-columns: 1fr; }
 dialog { width: min(440px, calc(100% - 32px)); padding: 28px; border: 0; border-radius: 22px; color: var(--ink); box-shadow: 0 30px 90px rgba(0,0,0,.28); }
 dialog::backdrop { background: rgba(8, 28, 18, .48); backdrop-filter: blur(4px); }
 dialog label { margin-top: 22px; }
