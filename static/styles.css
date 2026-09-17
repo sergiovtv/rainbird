@@ -62,6 +62,10 @@ button:disabled { cursor: wait; opacity: .58; }
 .status-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--line); }
 .status-strip > div { display: grid; gap: 5px; padding: 18px 22px; background: rgba(255,255,255,.85); }
 .status-label { color: var(--muted); font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.status-value-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.status-edit-button { width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 auto; padding: 0; border: 1px solid #cbd8d0; border-radius: 10px; color: var(--green-800); background: white; }
+.status-edit-button svg { width: 17px; height: 17px; }
+.status-edit-button:hover { border-color: var(--green-600); background: var(--green-100); }
 .zones-section { padding: 12px 0; }
 .section-heading { margin-bottom: 16px; }
 .zones-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
@@ -74,6 +78,7 @@ button:disabled { cursor: wait; opacity: .58; }
 .zone-controls { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
 dialog { width: min(440px, calc(100% - 32px)); padding: 28px; border: 0; border-radius: 22px; color: var(--ink); box-shadow: 0 30px 90px rgba(0,0,0,.28); }
 dialog::backdrop { background: rgba(8, 28, 18, .48); backdrop-filter: blur(4px); }
+dialog label { margin-top: 22px; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
 
 @media (max-width: 760px) {

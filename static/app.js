@@ -6,7 +6,9 @@ const setupMessage = $("#setupMessage");
 const dashboardMessage = $("#dashboardMessage");
 const badge = $("#connectionBadge");
 const dialog = $("#confirmDialog");
+const rainDelayDialog = $("#rainDelayDialog");
 let pendingAction = null;
+let currentRainDelay = 0;
 
 function setMessage(element, text = "", type = "") {
   element.textContent = text;
@@ -67,7 +69,8 @@ async function refreshStatus(silent = false) {
     renderZones(data.stations, data.states);
     const running = activeSet(data.states);
     $("#wateringState").textContent = running.size ? `Zona ${[...running].join(", ")} ativa` : "Em espera";
-    $("#rainDelay").textContent = `${Number(data.rainDelay || 0)} dia${Number(data.rainDelay || 0) === 1 ? "" : "s"}`;
+    currentRainDelay = Number(data.rainDelay || 0);
+    $("#rainDelay").textContent = `${currentRainDelay} dia${currentRainDelay === 1 ? "" : "s"}`;
     $("#lastUpdate").textContent = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     setMessage(dashboardMessage, silent ? "" : "Dados atualizados.", "success");
   } catch (error) {
@@ -121,6 +124,37 @@ $("#stopButton").addEventListener("click", () => {
   $("#dialogText").textContent = "Qualquer zona ativa será desligada imediatamente.";
   $("#confirmAction").textContent = "Parar tudo";
   dialog.showModal();
+});
+
+$("#editRainDelay").addEventListener("click", () => {
+  $("#rainDelayDays").value = String(Math.min(14, Math.max(0, currentRainDelay)));
+  setMessage($("#rainDelayMessage"));
+  rainDelayDialog.showModal();
+});
+
+$("#cancelRainDelay").addEventListener("click", () => rainDelayDialog.close());
+
+$("#rainDelayForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = event.submitter;
+  const days = Number($("#rainDelayDays").value);
+  button.disabled = true;
+  setMessage($("#rainDelayMessage"), "Salvando no programador…");
+  try {
+    await api("/api/rain-delay", {
+      method: "POST",
+      body: JSON.stringify({ days }),
+    });
+    currentRainDelay = days;
+    $("#rainDelay").textContent = `${days} dia${days === 1 ? "" : "s"}`;
+    rainDelayDialog.close();
+    setMessage(dashboardMessage, days === 0 ? "Atraso por chuva removido." : `Irrigação suspensa por ${days} dias.`, "success");
+    setTimeout(() => refreshStatus(true), 700);
+  } catch (error) {
+    setMessage($("#rainDelayMessage"), error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
 });
 
 dialog.addEventListener("close", async () => {

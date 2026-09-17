@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#087a47" />
     <title>Rain Bird — Controle local</title>
-    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/styles.css?v=2" />
   </head>
   <body>
     <main class="shell">
@@ -61,7 +61,18 @@
 
         <div class="status-strip">
           <div><span class="status-label">Estado</span><strong id="wateringState">Em espera</strong></div>
-          <div><span class="status-label">Atraso por chuva</span><strong id="rainDelay">0 dias</strong></div>
+          <div class="editable-status">
+            <span class="status-label">Atraso por chuva</span>
+            <div class="status-value-row">
+              <strong id="rainDelay">0 dias</strong>
+              <button id="editRainDelay" class="status-edit-button" type="button" aria-label="Editar atraso por chuva" title="Editar atraso por chuva">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 20h4.1L19.2 8.9a2.1 2.1 0 0 0 0-3L18.1 4.8a2.1 2.1 0 0 0-3 0L4 15.9V20Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="m13.7 6.2 4.1 4.1M4 20l4.6-1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
           <div><span class="status-label">Última leitura</span><strong id="lastUpdate">—</strong></div>
         </div>
 
@@ -92,6 +103,39 @@
       </form>
     </dialog>
 
-    <script src="/static/app.js"></script>
+    <dialog id="rainDelayDialog">
+      <form id="rainDelayForm">
+        <p class="eyebrow">Atraso por chuva</p>
+        <h2>Suspender a irrigação</h2>
+        <p class="muted">Durante o período escolhido, as programações automáticas não serão executadas.</p>
+        <label>
+          Número de dias
+          <select id="rainDelayDays" name="days">
+            <option value="0">Sem atraso — irrigação normal</option>
+            <option value="1">1 dia</option>
+            <option value="2">2 dias</option>
+            <option value="3">3 dias</option>
+            <option value="4">4 dias</option>
+            <option value="5">5 dias</option>
+            <option value="6">6 dias</option>
+            <option value="7">7 dias</option>
+            <option value="8">8 dias</option>
+            <option value="9">9 dias</option>
+            <option value="10">10 dias</option>
+            <option value="11">11 dias</option>
+            <option value="12">12 dias</option>
+            <option value="13">13 dias</option>
+            <option value="14">14 dias</option>
+          </select>
+        </label>
+        <div id="rainDelayMessage" class="message" aria-live="polite"></div>
+        <div class="dialog-actions">
+          <button id="cancelRainDelay" type="button" class="secondary-button">Cancelar</button>
+          <button type="submit" class="primary-button">Salvar atraso</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="/static/app.js?v=2"></script>
   </body>
 </html>

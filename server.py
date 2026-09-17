@@ -179,6 +179,18 @@ async def api_stop(_: web.Request) -> web.Response:
         return error_response(exc)
 
 
+async def api_rain_delay(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        days = int(body.get("days", -1))
+        if days not in range(0, 15):
+            raise ValueError("Escolha um atraso entre 0 e 14 dias.")
+        await service.call("set_rain_delay", days)
+        return web.json_response({"ok": True, "days": days})
+    except Exception as exc:
+        return error_response(exc)
+
+
 async def api_disconnect(_: web.Request) -> web.Response:
     service.password = None
     return web.json_response({"ok": True})
@@ -192,6 +204,7 @@ def create_app() -> web.Application:
     app.router.add_get("/api/status", api_status)
     app.router.add_post("/api/start", api_start)
     app.router.add_post("/api/stop", api_stop)
+    app.router.add_post("/api/rain-delay", api_rain_delay)
     app.router.add_post("/api/disconnect", api_disconnect)
     app.router.add_static("/static", STATIC)
     return app
