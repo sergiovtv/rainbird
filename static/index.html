@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#087a47" />
     <title>Rain Bird — Controle local</title>
-    <link rel="stylesheet" href="/static/styles.css?v=5" />
+    <link rel="stylesheet" href="/static/styles.css?v=6" />
   </head>
   <body>
     <main class="shell">
@@ -147,6 +147,23 @@
       </form>
     </dialog>
 
-    <script src="/static/app.js?v=5"></script>
+    <dialog id="zoneNameDialog">
+      <form id="zoneNameForm">
+        <p class="eyebrow">Identificação da zona</p>
+        <h2 id="zoneNameTitle">Editar nome</h2>
+        <p class="muted">Esse nome fica salvo neste Mac e não altera a programação do Rain Bird.</p>
+        <label>
+          Nome da zona
+          <input id="zoneNameInput" name="name" maxlength="40" autocomplete="off" placeholder="Ex.: Jardim da frente" />
+        </label>
+        <div id="zoneNameMessage" class="message" aria-live="polite"></div>
+        <div class="dialog-actions">
+          <button id="cancelZoneName" type="button" class="secondary-button">Cancelar</button>
+          <button type="submit" class="primary-button">Salvar nome</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="/static/app.js?v=6"></script>
   </body>
 </html>

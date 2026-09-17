@@ -75,6 +75,11 @@ button:disabled { cursor: wait; opacity: .58; }
 .zone-state { color: var(--muted); font-size: .84rem; font-weight: 750; }
 .zone-state.active { color: var(--green-700); }
 .zone-card h3 { margin: 0 0 16px; font-size: 1.1rem; }
+.zone-name-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; }
+.zone-name-row h3 { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.zone-name-edit { width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 auto; padding: 0; border: 1px solid #cbd8d0; border-radius: 10px; color: var(--green-800); background: white; }
+.zone-name-edit:hover { border-color: var(--green-600); background: var(--green-100); }
+.zone-name-edit svg { width: 17px; height: 17px; }
 .zone-controls { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
 .zone-controls.stop-only { grid-template-columns: 1fr; }
 .schedule-section { padding: 16px 0 4px; }

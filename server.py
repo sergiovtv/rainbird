@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parent
 STATIC = ROOT / "static"
 HOST = "127.0.0.1"
 PORT = 8787
+ZONE_NAMES_FILE = ROOT / ".rainbird-zone-names.json"
 
 
 class RainBirdService:
@@ -89,6 +90,38 @@ def decode_rzxe_schedule(data: str, _: dict[str, Any]) -> dict[str, Any]:
 # pyrainbird 2.1 does not yet decode the ESP-RZXe independent-zone format.
 # Replacing only this read decoder keeps the remaining, proven local protocol intact.
 rainbird.DECODERS["decode_schedule"] = decode_rzxe_schedule
+
+
+def load_zone_names() -> dict[str, str]:
+    if not service.host or not ZONE_NAMES_FILE.exists():
+        return {}
+    try:
+        saved = json.loads(ZONE_NAMES_FILE.read_text(encoding="utf-8"))
+        names = saved.get(service.host, {})
+        return {str(zone): str(name) for zone, name in names.items()}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def save_zone_name(zone: int, name: str) -> None:
+    try:
+        saved = (
+            json.loads(ZONE_NAMES_FILE.read_text(encoding="utf-8"))
+            if ZONE_NAMES_FILE.exists()
+            else {}
+        )
+    except (OSError, ValueError, TypeError):
+        saved = {}
+    controller_names = saved.setdefault(service.host, {})
+    if name:
+        controller_names[str(zone)] = name
+    else:
+        controller_names.pop(str(zone), None)
+    temporary = ZONE_NAMES_FILE.with_suffix(".tmp")
+    temporary.write_text(
+        json.dumps(saved, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    temporary.replace(ZONE_NAMES_FILE)
 
 
 def jsonable(value: Any) -> Any:
@@ -184,6 +217,7 @@ async def api_status(_: web.Request) -> web.Response:
                 "states": jsonable(states),
                 "rainDelay": jsonable(rain_delay),
                 "network": jsonable(network),
+                "zoneNames": load_zone_names(),
             }
         )
     except Exception as exc:
@@ -242,6 +276,23 @@ async def api_rain_delay(request: web.Request) -> web.Response:
         return error_response(exc)
 
 
+async def api_zone_name(request: web.Request) -> web.Response:
+    try:
+        if not service.configured():
+            raise web.HTTPUnauthorized(text="Conecte ao controlador primeiro.")
+        body = await request.json()
+        zone = int(body.get("zone", 0))
+        name = " ".join(str(body.get("name", "")).strip().split())
+        if zone not in range(1, 5):
+            raise ValueError("Zona inválida.")
+        if len(name) > 40:
+            raise ValueError("Use um nome com até 40 caracteres.")
+        save_zone_name(zone, name)
+        return web.json_response({"ok": True, "zone": zone, "name": name})
+    except Exception as exc:
+        return error_response(exc)
+
+
 async def api_disconnect(_: web.Request) -> web.Response:
     service.password = None
     return web.json_response({"ok": True})
@@ -257,6 +308,7 @@ def create_app() -> web.Application:
     app.router.add_post("/api/start", api_start)
     app.router.add_post("/api/stop", api_stop)
     app.router.add_post("/api/rain-delay", api_rain_delay)
+    app.router.add_post("/api/zone-name", api_zone_name)
     app.router.add_post("/api/disconnect", api_disconnect)
     app.router.add_static("/static", STATIC)
     return app

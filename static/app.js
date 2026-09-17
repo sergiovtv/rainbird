@@ -7,8 +7,34 @@ const dashboardMessage = $("#dashboardMessage");
 const badge = $("#connectionBadge");
 const dialog = $("#confirmDialog");
 const rainDelayDialog = $("#rainDelayDialog");
+const zoneNameDialog = $("#zoneNameDialog");
 let pendingAction = null;
 let currentRainDelay = 0;
+let editingZone = null;
+let zoneNames = {};
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"]/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;",
+  })[character]);
+}
+
+function zoneName(zone) {
+  return zoneNames[zone] || `Zona ${zone}`;
+}
+
+function zoneTitle(zone) {
+  return `
+    <div class="zone-name-row">
+      <h3>${escapeHtml(zoneName(zone))}</h3>
+      <button class="zone-name-edit" data-zone="${zone}" type="button" aria-label="Editar nome da zona ${zone}" title="Editar nome">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 20h4.1L19.2 8.9a2.1 2.1 0 0 0 0-3L18.1 4.8a2.1 2.1 0 0 0-3 0L4 15.9V20Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="m13.7 6.2 4.1 4.1M4 20l4.6-1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>`;
+}
 
 function setMessage(element, text = "", type = "") {
   element.textContent = text;
@@ -56,7 +82,7 @@ function renderZones(available, active) {
         <div class="zone-number">${zone}</div>
         <span class="zone-state ${running.has(zone) ? "active" : ""}">${running.has(zone) ? "Irrigando agora" : "Em espera"}</span>
       </div>
-      <h3>Zona ${zone}</h3>
+      ${zoneTitle(zone)}
       ${running.has(zone) ? `
         <div class="zone-controls stop-only">
           <button class="danger-button stop-zone" data-zone="${zone}" type="button">Desligar zona</button>
@@ -103,7 +129,7 @@ function renderSchedule(schedules) {
     <article class="schedule-card">
       <div class="schedule-card-heading">
         <div class="zone-number">${schedule.zone}</div>
-        <div><span class="schedule-label">Zona</span><h3>Zona ${schedule.zone}</h3></div>
+        <div><span class="schedule-label">Zona ${schedule.zone}</span><h3>${escapeHtml(zoneName(schedule.zone))}</h3></div>
       </div>
       <dl class="schedule-details">
         <div><dt>Dias</dt><dd>${scheduleRule(schedule)}</dd></div>
@@ -133,6 +159,7 @@ async function refreshStatus(silent = false) {
   if (!silent) setMessage(dashboardMessage, "Consultando o programador…");
   try {
     const data = await api("/api/status");
+    zoneNames = data.zoneNames || {};
     renderZones(data.stations, data.states);
     await refreshSchedule();
     const running = activeSet(data.states);
@@ -175,6 +202,16 @@ $("#connectForm").addEventListener("submit", async (event) => {
 });
 
 $("#zonesGrid").addEventListener("click", (event) => {
+  const editButton = event.target.closest(".zone-name-edit");
+  if (editButton) {
+    editingZone = Number(editButton.dataset.zone);
+    $("#zoneNameTitle").textContent = `Nome da zona ${editingZone}`;
+    $("#zoneNameInput").value = zoneNames[editingZone] || "";
+    setMessage($("#zoneNameMessage"));
+    zoneNameDialog.showModal();
+    $("#zoneNameInput").focus();
+    return;
+  }
   const stopButton = event.target.closest(".stop-zone");
   if (stopButton) {
     openStopDialog(Number(stopButton.dataset.zone));
@@ -202,6 +239,32 @@ $("#editRainDelay").addEventListener("click", () => {
 });
 
 $("#cancelRainDelay").addEventListener("click", () => rainDelayDialog.close());
+
+$("#cancelZoneName").addEventListener("click", () => zoneNameDialog.close());
+
+$("#zoneNameForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!editingZone) return;
+  const button = event.submitter;
+  const name = $("#zoneNameInput").value.trim();
+  button.disabled = true;
+  setMessage($("#zoneNameMessage"), "Salvando nome…");
+  try {
+    const result = await api("/api/zone-name", {
+      method: "POST",
+      body: JSON.stringify({ zone: editingZone, name }),
+    });
+    if (result.name) zoneNames[editingZone] = result.name;
+    else delete zoneNames[editingZone];
+    zoneNameDialog.close();
+    await refreshStatus(true);
+    setMessage(dashboardMessage, `Nome da zona ${editingZone} salvo.`, "success");
+  } catch (error) {
+    setMessage($("#zoneNameMessage"), error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
 
 $("#rainDelayForm").addEventListener("submit", async (event) => {
   event.preventDefault();
