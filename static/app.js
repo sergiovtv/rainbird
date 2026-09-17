@@ -33,7 +33,16 @@ async function api(path, options = {}) {
 }
 
 function activeSet(value) {
-  const source = value?.active_set ?? value?.activeSet ?? value?.active ?? [];
+  const container = value?.stations ?? value ?? {};
+  const stateList = container.states;
+  if (Array.isArray(stateList)) {
+    return new Set(
+      stateList
+        .map((isActive, index) => isActive ? index + 1 : null)
+        .filter((zone) => zone !== null),
+    );
+  }
+  const source = container.active_set ?? container.activeSet ?? container.active ?? [];
   return new Set(Array.isArray(source) ? source.map(Number) : []);
 }
 
